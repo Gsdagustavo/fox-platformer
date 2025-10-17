@@ -13,14 +13,25 @@ public class SpawnerScript : MonoBehaviour
     public float spawnMin = 1f;
     public float spawnMax = 2f;
     public float spawnHeightOffset = 1f;
-    public int maxSpawnAttempts = 5; // Máximo de tentativas antes de desistir
+    public int maxSpawnAttempts = 5;
+
+    [Header("Referência")]
+    public Transform playerOrCamera;             // Camera or player reference
+    public float spawnDistanceAhead = 10f;       // How far ahead to spawn platforms
 
     private float nextYPosition;
 
     void Start()
     {
         nextYPosition = transform.position.y;
-        Spawn();
+    }
+
+    void Update()
+    {
+        if (playerOrCamera != null && nextYPosition < playerOrCamera.position.y + spawnDistanceAhead)
+        {
+            Spawn();
+        }
     }
 
     void Spawn()
@@ -46,7 +57,7 @@ public class SpawnerScript : MonoBehaviour
         {
             Collider2D colisao = Physics2D.OverlapBox(
                 spawnPos,
-                new Vector2(3f, alturaPlataforma * 1.2f), // área de checagem
+                new Vector2(3f, alturaPlataforma * 1.2f),
                 0f
             );
 
@@ -56,7 +67,6 @@ public class SpawnerScript : MonoBehaviour
                 break;
             }
 
-            // Caso esteja colidindo, move um pouco pra cima e tenta de novo
             spawnPos.y += alturaPlataforma + spawnHeightOffset;
             tentativas++;
         }
@@ -64,7 +74,6 @@ public class SpawnerScript : MonoBehaviour
         if (!encontrouPosicao)
         {
             Debug.LogWarning("Spawner não encontrou posição livre. Pulando spawn desta plataforma.");
-            Invoke("Spawn", Random.Range(spawnMin, spawnMax));
             return;
         }
 
@@ -72,7 +81,7 @@ public class SpawnerScript : MonoBehaviour
         GameObject novaPlataforma = Instantiate(platformPrefab, spawnPos, Quaternion.identity);
 
         // Atualiza próxima posição base
-        nextYPosition = spawnPos.y + alturaPlataforma + spawnHeightOffset;
+        nextYPosition = spawnPos.y + alturaPlataforma + Random.Range(spawnMin, spawnMax);
 
         // --- 4. Possível coletável ---
         if (collectiblePrefabs.Length > 0 && Random.Range(0, 100) < collectibleSpawnChance)
@@ -82,13 +91,11 @@ public class SpawnerScript : MonoBehaviour
             Vector3 posColetavel = novaPlataforma.transform.position;
             posColetavel.y += alturaPlataforma / 2f + 1f;
 
-            // Checa se o espaço acima da plataforma está livre
             if (!Physics2D.OverlapCircle(posColetavel, 0.4f))
+            {
                 Instantiate(coletavelPrefab, posColetavel, Quaternion.identity);
+            }
         }
-
-        // --- 5. Agenda próxima ---
-        Invoke("Spawn", Random.Range(spawnMin, spawnMax));
     }
 
     // Gizmos para visualizar área de checagem
