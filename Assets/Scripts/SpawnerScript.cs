@@ -83,6 +83,8 @@ public class SpawnerScript : MonoBehaviour
         // Atualiza próxima posição base
         nextYPosition = spawnPos.y + alturaPlataforma + Random.Range(spawnMin, spawnMax);
 
+        Debug.Log("Next position Y: " + nextYPosition);
+
         // --- 4. Possível coletável ---
         if (collectiblePrefabs.Length > 0 && Random.Range(0, 100) < collectibleSpawnChance)
         {
